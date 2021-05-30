@@ -32,6 +32,8 @@ import { SpectrumEditor } from "./SpectrumEditor";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
 import { TrackEditor } from "./TrackEditor";
+import { MidiControllerManager } from "./MidiController";
+import { MidiControllerPrompt } from "./MidiControllerPrompt";
 
 //namespace beepbox {
 const { button, div, input, select, span, optgroup, option, canvas } = HTML;
@@ -300,6 +302,7 @@ export class SongEditor {
 	private readonly _muteEditor: MuteEditor = new MuteEditor(this._doc, this);
 	private readonly _loopEditor: LoopEditor = new LoopEditor(this._doc);
 	private readonly _piano: Piano = new Piano(this._doc);
+	private readonly _midiController: MidiControllerManager = new MidiControllerManager(this._doc, this._patternEditor);
 	private readonly _octaveScrollBar: OctaveScrollBar = new OctaveScrollBar(this._doc, this._piano);
 	private readonly _playButton: HTMLButtonElement = button({ style: "width: 80px;", type: "button" });
 	private readonly _prevBarButton: HTMLButtonElement = button({ class: "prevBarButton", style: "width: 40px;", type: "button", title: "Previous Bar (left bracket)" });
@@ -369,6 +372,7 @@ export class SongEditor {
 		option({ value: "displayVolumeBar" }, "Show Playback Volume"),
 		option({ value: "fullScreen" }, "Set Layout..."),
 		option({ value: "colorTheme" }, "Set Theme..."),
+		option({ value: "midiController" }, "Set Midi Controller..."),
 		//option({value: "alwaysShowSettings"}, "Customize All Instruments"),
 	);
 	private readonly _scaleSelect: HTMLSelectElement = buildOptions(select(), Config.scales.map(scale => scale.name));
@@ -701,7 +705,7 @@ export class SongEditor {
 	private outVolumeHistoricTimer: number = 0;
 	private outVolumeHistoricCap: number = 0;
 	private lastOutVolumeCap: number = 0;
-
+	
 	constructor(private _doc: SongDocument) {
 		this._doc.notifier.watch(this.whenUpdated);
 		window.addEventListener("resize", this.whenUpdated);
@@ -909,6 +913,11 @@ export class SongEditor {
 			fullScreenOption.disabled = true;
 			fullScreenOption.setAttribute("hidden", "");
 		}
+
+		// Activate MIDI
+		console.log("printing _midiController");
+		console.log(this._midiController);
+		this._midiController.initializeMidi();
 	}
 
 	private _toggleDropdownMenu(dropdown: number): void {
@@ -1102,11 +1111,11 @@ export class SongEditor {
 		this._doc.openPrompt(promptName);
 		this._setPrompt(promptName);
 	}
-
+	
 	private _setPrompt(promptName: string | null): void {
 		if (this._currentPromptName == promptName) return;
 		this._currentPromptName = promptName;
-
+		
 		if (this.prompt) {
 			if (this._wasPlaying && !(this.prompt instanceof TipPrompt || this.prompt instanceof LimiterPrompt || this.prompt instanceof CustomChipPrompt)) {
 				this._play();
@@ -1118,7 +1127,7 @@ export class SongEditor {
 			this.prompt = null;
 			this.refocusStage();
 		}
-
+		
 		if (promptName) {
 			switch (promptName) {
 				case "export":
@@ -1153,6 +1162,9 @@ export class SongEditor {
 					break;
 				case "layout":
 					this.prompt = new LayoutPrompt(this._doc);
+					break;
+				case "midiController":
+					this.prompt = new MidiControllerPrompt(this._doc, this._midiController);
 					break;
 				default:
 					this.prompt = new TipPrompt(this._doc, promptName);
@@ -2848,6 +2860,9 @@ export class SongEditor {
 				break;
 			case "colorTheme":
 				this._openPrompt("theme");
+				break;
+			case "midiController":
+				this._openPrompt("midiController");
 				break;
 		}
 		this._optionsMenu.selectedIndex = 0;

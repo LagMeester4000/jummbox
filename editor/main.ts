@@ -9,14 +9,17 @@ import { NotePin, Note, Pattern, Instrument, Channel, Synth } from "../synth/syn
 import { SongDocument } from "./SongDocument";
 import { ExportPrompt } from "./ExportPrompt";
 import { ChangePreset } from "./changes";
+import "./MidiController";
 
 
 //namespace beepbox {
-const doc: SongDocument = new SongDocument();
+export const doc: SongDocument = new SongDocument();
 const editor: SongEditor = new SongEditor(doc);
 const beepboxEditorContainer: HTMLElement = document.getElementById("beepboxEditorContainer")!;
 beepboxEditorContainer.appendChild(editor.mainLayer);
 editor.whenUpdated();
+
+console.log("SETUP...");
 
 // Fade-in transitions
 editor.mainLayer.className += " load";
@@ -114,6 +117,7 @@ if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 editor.updatePlayButton();
 
 if ("serviceWorker" in navigator) {
+	// PLEASE REENABLE, disabled for debug info
 	navigator.serviceWorker.register("/service_worker.js", { updateViaCache: "all", scope: "/" }).catch(() => { });
 }
 

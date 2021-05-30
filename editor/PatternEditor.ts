@@ -57,14 +57,14 @@ export class PatternEditor {
 		this._svgPlayhead,
 	);
 	public readonly container: HTMLDivElement = HTML.div({ style: "height: 100%; overflow:hidden; position: relative; flex-grow: 1;" }, this._svg, this.modDragValueLabel);
-
+	
 	private readonly _defaultModBorder: number = 34;
 	private readonly _backgroundPitchRows: SVGRectElement[] = [];
 	private readonly _backgroundDrumRow: SVGRectElement = SVG.rect();
 	private readonly _backgroundModRow: SVGRectElement = SVG.rect();
-
+	
 	private _editorWidth: number;
-
+	
 	private _modDragValueLabelLeft: number = 0;
 	private _modDragValueLabelTop: number = 0;
 	private _modDragValueLabelWidth: number = 0;
@@ -75,7 +75,7 @@ export class PatternEditor {
 	private _modDragSetting: ModSetting;
 	private _modDragLowerBound: number = 0;
 	private _modDragUpperBound: number = 6;
-
+	
 	private _editorHeight: number;
 	private _partWidth: number;
 	private _pitchHeight: number = -1;
@@ -122,7 +122,10 @@ export class PatternEditor {
 	private _renderedNoiseChannelCount: number = -1;
 	private _renderedModChannelCount: number = -1;
 	private _followPlayheadBar: number = -1;
-
+	public highlightedNotes: number[] = [];
+	
+	public get pattern(): Pattern | null { return this._pattern; }
+	
 	constructor(private _doc: SongDocument, private _interactive: boolean, private _barOffset: number) {
 		for (let i: number = 0; i < Config.pitchesPerOctave; i++) {
 			const rectangle: SVGRectElement = SVG.rect();
@@ -131,14 +134,14 @@ export class PatternEditor {
 			this._svgNoteBackground.appendChild(rectangle);
 			this._backgroundPitchRows[i] = rectangle;
 		}
-
+		
 		this._backgroundDrumRow.setAttribute("x", "1");
 		this._backgroundDrumRow.setAttribute("y", "1");
 		this._backgroundDrumRow.setAttribute("fill", ColorConfig.pitchBackground);
 		this._svgDrumBackground.appendChild(this._backgroundDrumRow);
 		this._backgroundModRow.setAttribute("fill", ColorConfig.pitchBackground);
 		this._svgModBackground.appendChild(this._backgroundModRow);
-
+		
 		if (this._interactive) {
 			this._updateCursorStatus();
 			this._updatePreview();
@@ -148,29 +151,29 @@ export class PatternEditor {
 			document.addEventListener("mouseup", this._whenCursorReleased);
 			this._svg.addEventListener("mouseover", this._whenMouseOver);
 			this._svg.addEventListener("mouseout", this._whenMouseOut);
-
+			
 			this._svg.addEventListener("touchstart", this._whenTouchPressed);
 			this._svg.addEventListener("touchmove", this._whenTouchMoved);
 			this._svg.addEventListener("touchend", this._whenCursorReleased);
 			this._svg.addEventListener("touchcancel", this._whenCursorReleased);
-
+			
 			this.modDragValueLabel.addEventListener("input", this._validateModDragLabelInput);
 		} else {
 			this._svgPlayhead.style.display = "none";
 			this._svg.appendChild(SVG.rect({ x: 0, y: 0, width: 10000, height: 10000, fill: ColorConfig.editorBackground, style: "opacity: 0.5;" }));
 		}
-
+		
 		this.resetCopiedPins();
 	}
-
+	
 	private _validateModDragLabelInput = (event: Event): void => {
 		const label: HTMLDivElement = <HTMLDivElement>event.target;
-
+		
 		// Special case - when user is typing a number between zero and min, allow it (the alternative is quite annoying, when min is nonzero)
 		let converted: number = Number(label.innerText);
 		if (!isNaN(converted) && converted >= 0 && converted < this._modDragLowerBound)
 			return;
-
+		
 		// Another special case - allow "" e.g. the empty string and a single negative sign, but don't do anything about it.
 		if (label.innerText != "" && label.innerText != "-") {
 			// Force NaN results to be 0
@@ -178,7 +181,7 @@ export class PatternEditor {
 				converted = this._modDragLowerBound;
 				label.innerText = "" + this._modDragLowerBound;
 			}
-
+			
 			let presValue: number = Math.floor(Math.max(Number(this._modDragLowerBound), Math.min(Number(this._modDragUpperBound), converted)));
 			if (label.innerText != presValue + "")
 				label.innerText = presValue + "";
@@ -699,7 +702,7 @@ export class PatternEditor {
 			}
 		}
 	}
-
+	
 	private _whenCursorPressed(): void {
 		// Check for click on mod value label
 		if (this._doc.song.getChannelIsMod(this._doc.channel) && this.modDragValueLabel.style.getPropertyValue("display") != "none" &&
@@ -715,7 +718,7 @@ export class PatternEditor {
 				if (sel != null)
 					sel.selectAllChildren(this.modDragValueLabel);
 			}
-
+			
 			window.setTimeout(() => { this.modDragValueLabel.focus(); });
 			this.editingModLabel = true;
 		} else {
@@ -730,7 +733,7 @@ export class PatternEditor {
 			this._dragChange = sequence;
 			this._lastChangeWasPatternSelection = this._doc.lastChangeWas(this._changePatternSelection);
 			this._doc.setProspectiveChange(this._dragChange);
-
+			
 			if (this._cursorAtStartOfSelection()) {
 				this._draggingStartOfSelection = true;
 			} else if (this._cursorAtEndOfSelection()) {
@@ -751,13 +754,13 @@ export class PatternEditor {
 				this._draggingSelectionContents = true;
 			} else if (this._cursor.valid && this._cursor.curNote == null) {
 				sequence.append(new ChangePatternSelection(this._doc, 0, 0));
-
+				
 				// If clicking in empty space, the result will be adding a note,
 				// so we can safely add it immediately. Note that if clicking on
 				// or near an existing note, the result will depend on whether
 				// a drag follows, so we couldn't add the note yet without being
 				// confusing.
-
+				
 				const note: Note = new Note(this._cursor.pitch, this._cursor.start, this._cursor.end, 3, this._doc.song.getChannelIsNoise(this._doc.channel));
 				note.pins = [];
 				for (const oldPin of this._cursor.pins) {
@@ -1177,7 +1180,7 @@ export class PatternEditor {
 				if (this._pattern != null && this._doc.song.getChannelIsMod(this._doc.channel)) this._pattern.notes.sort(function (a, b) { return (a.start == b.start) ? a.pitches[0] - b.pitches[0] : a.start - b.start; });
 
 			} else {
-
+				
 				if (this._pattern == null) throw new Error();
 
 				const sequence: ChangeSequence = new ChangeSequence();
@@ -1449,19 +1452,37 @@ export class PatternEditor {
 				this._svgBackground.setAttribute("fill", "url(#patternEditorNoteBackground" + this._barOffset + ")");
 			}
 		}
-
+		
+		// Draw highlighted noted (for midi)
+		if (true)
+		{
+			if (!this._doc.song.getChannelIsMod(this._doc.channel))
+			{
+				for (const note of this.highlightedNotes)
+				{
+					const realNote = new Note(note, 0, this._editorWidth, 1, false);
+					
+					const notePath: SVGPathElement = SVG.path();
+					notePath.setAttribute("fill", ColorConfig.multiplicativeModSlider);
+					notePath.setAttribute("pointer-events", "none");
+					this._drawNote(notePath, realNote.pitches[0], realNote.start, realNote.pins, this._pitchHeight / 2, false, this._octaveOffset);
+					this._svgNoteContainer.appendChild(notePath);
+				}
+			}
+		}
+		
 		if (this._doc.showChannels) {
 			if (!this._doc.song.getChannelIsMod(this._doc.channel)) {
 				for (let channel: number = this._doc.song.pitchChannelCount + this._doc.song.noiseChannelCount - 1; channel >= 0; channel--) {
 					if (channel == this._doc.channel) continue;
 					if (this._doc.song.getChannelIsNoise(channel) != this._doc.song.getChannelIsNoise(this._doc.channel)) continue;
-
+					
 					const pattern2: Pattern | null = this._doc.song.getPattern(channel, this._doc.bar + this._barOffset);
 					if (pattern2 == null) continue;
 					for (const note of pattern2.notes) {
 						for (const pitch of note.pitches) {
 							const notePath: SVGPathElement = SVG.path();
-							notePath.setAttribute("fill", ColorConfig.getChannelColor(this._doc.song, channel).secondaryNote);
+							notePath.setAttribute("fill", ColorConfig.getChannelColor(this._doc.song, channel).primaryChannel);
 							notePath.setAttribute("pointer-events", "none");
 							this._drawNote(notePath, pitch, note.start, note.pins, this._pitchHeight * 0.19, false, this._doc.song.channels[channel].octave * Config.pitchesPerOctave);
 							this._svgNoteContainer.appendChild(notePath);

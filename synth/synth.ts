@@ -3488,7 +3488,7 @@ class Tone {
 }
 
 export class Synth {
-
+    
     public warmUpSynthesizer(song: Song | null): void {
         // Don't bother to generate the drum waves unless the song actually
         // uses them, since they may require a lot of computation.
@@ -3596,7 +3596,8 @@ export class Synth {
         return (Math.pow(16.0, amplitude / 15.0) - 1.0) / 15.0;
     }
 
-    public samplesPerSecond: number = 44100;
+    //public samplesPerSecond: number = 44100;
+    public samplesPerSecond: number = 44100 / 4;
 
     public song: Song | null = null;
     public liveInputDuration: number = 0;
@@ -3605,7 +3606,7 @@ export class Synth {
     public liveInputChannel: number = 0;
     public loopRepeatCount: number = -1;
     public volume: number = 1.0;
-
+    
     private wantToSkip: boolean = false;
     private playheadInternal: number = 0.0;
     private bar: number = 0;
@@ -3654,6 +3655,22 @@ export class Synth {
     public get playing(): boolean {
         return this.isPlayingSong;
     }
+
+	public get patternEndPosition(): number {
+		if (this.song != null)
+		{
+			return this.song.beatsPerBar * Config.partsPerBeat;
+		}
+		return 0;
+	}
+	
+	public get patternPlayheadPosition(): number {
+		if (this.song != null) {
+			return this.beat * Config.partsPerBeat +
+					this.part + this.tick;
+		}
+		return 0;
+	}
 
     public get playhead(): number {
         return this.playheadInternal;
@@ -4015,7 +4032,7 @@ export class Synth {
 
     private activateAudio(): void {
         if (this.audioCtx == null || this.scriptNode == null) {
-            this.audioCtx = this.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+            this.audioCtx = this.audioCtx || new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive'/*, sampleRate: 44100 */});
             this.samplesPerSecond = this.audioCtx.sampleRate;
             this.scriptNode = this.audioCtx.createScriptProcessor ? this.audioCtx.createScriptProcessor(2048, 0, 2) : this.audioCtx.createJavaScriptNode(2048, 0, 2); // 2048, 0 input channels, 2 output channels
             this.scriptNode.onaudioprocess = this.audioProcessCallback;
