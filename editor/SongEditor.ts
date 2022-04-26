@@ -560,7 +560,7 @@ export class SongEditor {
     private readonly _feedbackRow2: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "Fdback Vol:"), this._feedbackAmplitudeSlider.container);
     /*
      * @jummbus - my very real, valid reason for cutting this button: I don't like it.
-     * 
+     *
     private readonly _customizeInstrumentButton: HTMLButtonElement = button({type: "button", style: "margin: 2px 0"},
 
         "Customize Instrument",
@@ -1046,7 +1046,7 @@ export class SongEditor {
             layoutOption.disabled = true;
             layoutOption.setAttribute("hidden", "");
         }
-        
+
 		// Activate MIDI
 		console.log("printing _midiController");
 		console.log(this._midiController);
@@ -2150,16 +2150,16 @@ export class SongEditor {
                 //Hide instrument select if channel is "none" or "song"
                 if (instrument.modChannels[mod] < 0) {
                     ((this._modInstrumentBoxes[mod].parentElement) as HTMLDivElement).style.display = "none";
-                    $("#modInstrumentText" + mod).get(0).style.display = "none";
-                    $("#modChannelText" + mod).get(0).innerText = "Channel:";
+                    $("#modInstrumentText" + mod).get(0)!.style.display = "none";
+                    $("#modChannelText" + mod).get(0)!.innerText = "Channel:";
 
                     //Hide setting select if channel is "none"
                     if (instrument.modChannels[mod] == -2) {
-                        $("#modSettingText" + mod).get(0).style.display = "none";
+                        $("#modSettingText" + mod).get(0)!.style.display = "none";
                         ((this._modSetBoxes[mod].parentElement) as HTMLDivElement).style.display = "none";
                     }
                     else {
-                        $("#modSettingText" + mod).get(0).style.display = "";
+                        $("#modSettingText" + mod).get(0)!.style.display = "";
                         ((this._modSetBoxes[mod].parentElement) as HTMLDivElement).style.display = "";
                     }
 
@@ -2169,9 +2169,9 @@ export class SongEditor {
                 }
                 else {
                     ((this._modInstrumentBoxes[mod].parentElement) as HTMLDivElement).style.display = (channel.instruments.length > 1) ? "" : "none";
-                    $("#modInstrumentText" + mod).get(0).style.display = (channel.instruments.length > 1) ? "" : "none";
-                    $("#modChannelText" + mod).get(0).innerText = (channel.instruments.length > 1) ? "Ch:" : "Channel:";
-                    $("#modSettingText" + mod).get(0).style.display = "";
+                    $("#modInstrumentText" + mod).get(0)!.style.display = (channel.instruments.length > 1) ? "" : "none";
+                    $("#modChannelText" + mod).get(0)!.innerText = (channel.instruments.length > 1) ? "Ch:" : "Channel:";
+                    $("#modSettingText" + mod).get(0)!.style.display = "";
                     ((this._modSetBoxes[mod].parentElement) as HTMLDivElement).style.display = "";
 
                     this._modTargetIndicators[mod].style.setProperty("fill", ColorConfig.indicatorPrimary);
@@ -2180,8 +2180,8 @@ export class SongEditor {
 
                 let filterType: string = Config.modulators[instrument.modulators[mod]].name;
                 if (filterType == "eq filter" || filterType == "note filter") {
-                    $("#modFilterText" + mod).get(0).style.display = "";
-                    $("#modSettingText" + mod).get(0).style.setProperty("margin-bottom", "2px");
+                    $("#modFilterText" + mod).get(0)!.style.display = "";
+                    $("#modSettingText" + mod).get(0)!.style.setProperty("margin-bottom", "2px");
 
                     let useInstrument: number = instrument.modInstruments[mod];
                     let modChannel: Channel = this._doc.song.channels[Math.max(0, instrument.modChannels[mod])];
@@ -2245,8 +2245,8 @@ export class SongEditor {
 
 
                 } else {
-                    $("#modFilterText" + mod).get(0).style.display = "none";
-                    $("#modSettingText" + mod).get(0).style.setProperty("margin-bottom", "0.9em");
+                    $("#modFilterText" + mod).get(0)!.style.display = "none";
+                    $("#modSettingText" + mod).get(0)!.style.setProperty("margin-bottom", "0.9em");
 
                 }
             }
@@ -2492,7 +2492,7 @@ export class SongEditor {
         }
 
     }
-    
+
     private _whenKeyUp = (event: KeyboardEvent): void => {
 		this._muteEditor.onKeyUp(event);
 		if (!event.ctrlKey) { // Ctrl
@@ -2780,7 +2780,7 @@ export class SongEditor {
                 } else {
                     if (this._doc.enableChannelMuting) {
                         // JummBox deviation: I like shift+s as just another mute toggle personally.
-                        // Easier to reach than M and the shift+s invert functionality I am overwriting could be 
+                        // Easier to reach than M and the shift+s invert functionality I am overwriting could be
                         // obtained with M anyway. Useability-wise you very often want to 'add' channels on to a solo as you work.
                         if (event.shiftKey) {
                             this._doc.selection.muteChannels(false);
